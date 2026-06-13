@@ -8,7 +8,7 @@ This project extends the Directed Acyclic Graph (DAG) multi-agent orchestrator f
 
 ## DAG-Based Architecture
 
-This system inherits and expands upon the robust concurrent DAG (Directed Acyclic Graph) architecture of the original [Shopping-Agent-V3-with-DAG](https://github.com/pradeepelavarasan/Shopping-Agent-V3-with-DAG).
+This system inherits and expands upon the robust concurrent DAG (Directed Acyclic Graph) architecture of the original [Shopping-Agent-V3-with-DAG](https://github.com/pradeepelavarasan/Shopping-Agent-V3-with-DAG). While agents like the Planner, Critic, Browser, Researcher and Formatter are standard orchestrator nodes, **Product Shortlister**, **Product Analyst**, and **Product Recommendation** are custom, shopping-specific skills integrated into the pipeline:
 
 1. **Planner**: Receives the user query, decides the execution plan, and compiles the graph structure.
 2. **Browser (Search, Filter, & Extraction)**: Handles the initial browser navigation, search queries, applying filters (like delivery checkboxes or discount links) on the e-commerce site, and extracting the raw product listing data.
@@ -18,6 +18,7 @@ This system inherits and expands upon the robust concurrent DAG (Directed Acycli
 6. **Product Analyst**: Evaluates candidate items by analyzing detailed specifications and reviews retrieved by the browser.
 7. **Product Recommendation**: Aggregates analyst reports, evaluates product trade-offs across the five core evaluation dimensions, and selects the top recommendation.
 8. **Formatter**: Structures and emits the final JSON matching the target schema.
+
 
 ---
 
