@@ -6,6 +6,8 @@ This project extends the Directed Acyclic Graph (DAG) multi-agent orchestrator f
 
 🎥 YouTube Demo: https://youtu.be/tkbn3P2-srM
 
+![Banner Image](assets/Banner%20image.png)
+
 ---
 
 ## DAG-Based Architecture
