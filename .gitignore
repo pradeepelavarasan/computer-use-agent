@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.pytest_cache/
+
+# Environment
+.env
+
+# Logs and session data
+logs/
+run.log
+*.log
+
+# Videos
+Video/
+Videos/
+*.webp
+*.mp4
+*.mov
+
+# Databases
+*.db
+*.sqlite
+
+# Test fixtures and unit tests — do not commit to GitHub
+test/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/

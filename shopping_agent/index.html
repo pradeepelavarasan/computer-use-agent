@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Shopping Agent Analysis</title>
+    <link rel="stylesheet" href="/static/results.css">
+</head>
+
+<body>
+    <div id="shopping-agent-container">
+
+        <!-- SEARCH VIEW -->
+        <div id="search-view" class="search-wrapper">
+            <div class="search-logo">
+                ✨ Shopping Agent
+            </div>
+            <form id="search-form" class="search-box-container" onsubmit="handleSearchSubmit(event)">
+                <input type="text" id="search-input" class="search-input"
+                    placeholder="Ask the Agent to search and analyze products..." required autocomplete="off">
+                <button type="submit" class="search-submit-btn">🔍</button>
+            </form>
+
+            <!-- Filter Controls -->
+            <div class="filter-bar" id="filter-bar">
+                <!-- Sort By -->
+                <div class="filter-chip">
+                    <label class="filter-label">Sort by</label>
+                    <div class="custom-select-wrapper">
+                        <select id="sort-select" class="filter-select">
+                            <option value="">Featured</option>
+                            <option value="Price: Low to High">Price: Low to High</option>
+                            <option value="Price: High to Low">Price: High to Low</option>
+                            <option value="Avg. Customer Review">Avg. Customer Review</option>
+                            <option value="Newest Arrivals">Newest Arrivals</option>
+                            <option value="Best Sellers">Best Sellers</option>
+                        </select>
+                        <span class="select-arrow">▾</span>
+                    </div>
+                </div>
+
+                <div class="filter-divider"></div>
+
+                <!-- Urgent checkbox -->
+                <label class="filter-chip filter-chip-toggle" id="urgent-label">
+                    <input type="checkbox" id="urgent-check" class="filter-checkbox">
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    <span class="filter-label">⚡ Urgent delivery</span>
+                </label>
+
+                <div class="filter-divider"></div>
+
+                <!-- Discount slider -->
+                <div class="filter-chip filter-chip-slider">
+                    <label class="filter-label">🏷️ Min discount</label>
+                    <div class="slider-row">
+                        <input type="range" id="discount-slider" class="filter-slider"
+                               min="0" max="70" step="5" value="0">
+                        <span class="slider-value" id="discount-value">Off</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTS VIEW (Hidden initially) -->
+        <div id="results-view" class="hidden" style="display: flex; flex-direction: column; flex: 1;">
+            <div class="header">
+                <div class="header-left">
+                    <h2 style="cursor: pointer;" onclick="showSearchView()">✨ Shopping Agent Results</h2>
+                </div>
+                <div class="header-actions">
+                    <button class="tune-btn" id="sa-tune-btn" onclick="openGraphViewer()" title="Open live DAG graph in a new tab">
+                        🧠 How I recommend
+                    </button>
+                    <div class="divider"></div>
+                    <button id="sa-close" title="New Search" onclick="showSearchView()">&times;</button>
+                </div>
+            </div>
+
+            <div id="sa-content">
+                <!-- Loading State -->
+                <div class="loading-block" id="loading-block">
+                    <div class="ai-analyzer">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
+                    <div id="loading-cycler">Initializing agentic DAG loop...</div>
+                </div>
+                <!-- Dynamic Content Container -->
+                <div id="matrix-container"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const loadingTexts = [
+            "Initializing agentic DAG loop...",
+            "Spawning Planner to decompose search query...",
+            "Running parallel Web Researchers...",
+            "Fetching product listings and pricing...",
+            "Analyzing customer sentiment and reliability...",
+            "Splicing Coder & executing calculations in sandbox...",
+            "Distilling ratings and reviews...",
+            "Running Formatter to build final matrix..."
+        ];
+
+        let loadingInterval = null;
+
+        function showSearchView() {
+            document.getElementById('search-view').classList.remove('hidden');
+            document.getElementById('results-view').classList.add('hidden');
+            document.getElementById('matrix-container').innerHTML = '';
+            document.getElementById('search-input').value = '';
+            clearInterval(loadingInterval);
+        }
+
+        function showResultsView() {
+            document.getElementById('search-view').classList.add('hidden');
+            document.getElementById('results-view').classList.remove('hidden');
+            document.getElementById('loading-block').style.display = 'flex';
+
+            // Cycle loading texts to show agent process
+            let idx = 0;
+            const textEl = document.getElementById('loading-cycler');
+            textEl.innerText = loadingTexts[0];
+            clearInterval(loadingInterval);
+            loadingInterval = setInterval(() => {
+                idx = (idx + 1) % loadingTexts.length;
+                textEl.innerText = loadingTexts[idx];
+            }, 3500);
+        }
+
+        async function handleSearchSubmit(event) {
+            event.preventDefault();
+            const baseQuery = document.getElementById('search-input').value.trim();
+            if (!baseQuery) return;
+
+            // ── Build augmented query from filter controls ──────────────────────
+            const sortVal     = document.getElementById('sort-select').value;
+            const isUrgent    = document.getElementById('urgent-check').checked;
+            const discountPct = parseInt(document.getElementById('discount-slider').value, 10);
+
+            const filters = [];
+            if (sortVal)        filters.push(`sort by "${sortVal}"`);
+            if (isUrgent)       filters.push(`filter by "Get It Today" or "Get It by Tomorrow"`);
+            if (discountPct > 0) filters.push(`filter by "${discountPct}% Off or more"`);
+
+            const query = filters.length
+                ? `${baseQuery}. Additional filters: ${filters.join('; ')}.`
+                : baseQuery;
+
+            // Reset active session ID before launching a new search
+            window._activeSessionId = null;
+            showResultsView();
+
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+
+                const data = await response.json();
+
+                // Capture session_id if the server returns it
+                if (data.session_id) {
+                    window._activeSessionId = data.session_id;
+                }
+
+                if (!response.ok || data.error) {
+                    showError(data.error || "Failed to retrieve recommendation matrix.");
+                    return;
+                }
+
+                renderMatrix(data);
+            } catch (err) {
+                showError("Connection error: " + err.message);
+            }
+        }
+
+        // ── Discount slider live label + gradient fill ─────────────────────────
+        const slider = document.getElementById('discount-slider');
+        const sliderLabel = document.getElementById('discount-value');
+        slider.addEventListener('input', function() {
+            const v = parseInt(this.value, 10);
+            sliderLabel.textContent = v > 0 ? v + '%+' : 'Off';
+            // Update gradient fill percentage
+            const pct = (v / 70) * 100;
+            this.style.background = `linear-gradient(to right, #a78bfa 0%, #a78bfa ${pct}%, rgba(255,255,255,0.1) ${pct}%)`;
+        });
+
+
+        function renderMatrix(data) {
+            const container = document.getElementById('matrix-container');
+            const loading = document.getElementById('loading-block');
+
+            if (loading) loading.style.display = 'none';
+            clearInterval(loadingInterval);
+
+            const products = data.products || [];
+            const analysis = data.analysis || { overall_agent_summary: "Evaluation complete.", products: [] };
+            const rootSummary = analysis.overall_agent_summary;
+
+            const topRecId = analysis.products.find(x => x.is_top_recommendation)?.product_id;
+
+            // Sort so top recommendation is first
+            products.sort((a, b) => {
+                if (a.id === topRecId) return -1;
+                if (b.id === topRecId) return 1;
+                return 0;
+            });
+
+            let html = `
+            <div class="main-wrapper">
+                <div class="global-agent-summary">
+                    <div class="agent-avatar">✨</div>
+                    <div class="agent-text">"${rootSummary}"</div>
+                </div>
+                <div class="comparison-grid">`;
+
+            products.forEach(prod => {
+                const aiInsight = analysis.products.find(x => x.product_id === prod.id) || { evaluations: {} };
+                const isTop = prod.id === topRecId;
+
+                let colClass = isTop ? "grid-col top-rec" : "grid-col";
+                let topBadge = isTop ? '<div class="top-badge-matrix">⭐ Top Recommendation</div>' : "";
+
+                let evalRows = '';
+                const priorities = data.task?.priorities || [];
+                priorities.forEach(crit => {
+                    const evalPayload = aiInsight.evaluations[crit];
+                    let analysisText = "No data available from Agent.";
+                    let scoreClass = "sent-neutral";
+
+                    if (evalPayload) {
+                        // evalPayload can be either a plain string (older formatter output)
+                        // or an {analysis, score} object (correct formatter output)
+                        if (typeof evalPayload === 'string') {
+                            analysisText = evalPayload || analysisText;
+                        } else {
+                            analysisText = evalPayload.analysis || analysisText;
+                            const score = (evalPayload.score || '').toLowerCase();
+                            if (score === 'positive') scoreClass = 'sent-positive';
+                            else if (score === 'negative') scoreClass = 'sent-negative';
+                        }
+                    }
+
+                    evalRows += `
+                     <div class="eval-row ${scoreClass}">
+                        <span class="eval-label">${crit}</span>
+                        <span class="eval-text">${analysisText}</span>
+                     </div>`;
+                });
+
+                const reviewsStr = prod.reviews_count ? ` (${Number(prod.reviews_count).toLocaleString()} reviews)` : '';
+                const ratingStr = prod.rating ? `⭐ ${prod.rating}${reviewsStr}` : 'No Rating';
+
+                html += `
+                <div class="${colClass}">
+                    ${topBadge}
+                    <a class="product-click-zone" href="${prod.url || '#'}" target="_blank">
+                        <div class="matrix-img-wrapper">
+                             <div class="matrix-img">
+                                <img src="${prod.image_url ? '/api/image-proxy?url=' + encodeURIComponent(prod.image_url) : 'https://via.placeholder.com/180?text=Product+Image'}" onerror="this.src='https://via.placeholder.com/180?text=Product+Image'"/>
+                             </div>
+                        </div>
+                        <div class="grid-header">
+                             <div class="matrix-title" title="${prod.title.replace(/"/g, '&quot;')}">${prod.title}</div>
+                             <div class="matrix-metrics">
+                                   <span class="price">${prod.price || 'N/A'}</span>
+                                   <span class="rating">${ratingStr}</span>
+                             </div>
+                        </div>
+                    </a>
+                    <div class="grid-body">
+                        ${evalRows}
+                    </div>
+                </div>`;
+            });
+
+            html += '</div></div>';
+            container.innerHTML = html;
+        }
+
+        function showError(msg) {
+            const container = document.getElementById('matrix-container');
+            const loading = document.getElementById('loading-block');
+            if (loading) loading.style.display = 'none';
+            clearInterval(loadingInterval);
+
+            container.innerHTML = `
+            <div class="agent-error-container">
+                <div class="error-icon">⚠️</div>
+                <div class="error-title">Error Processing Query</div>
+                <div class="error-user-msg">${msg}</div>
+                <button class="err-retry-btn" onclick="showSearchView()">Back to Search</button>
+            </div>`;
+        }
+
+        // ── Graph Viewer ──────────────────────────────────────────────────────────
+        function openGraphViewer() {
+            const sid = window._activeSessionId;
+            const url = sid ? `/graph?session_id=${encodeURIComponent(sid)}` : '/graph';
+            window.open(url, '_blank');
+        }
+
+        // Remove old dropdown listeners (now replaced by openGraphViewer)
+    </script>
+</body>
+
+</html>
