@@ -4,6 +4,8 @@ A multi-agent e-commerce browser automation and product analysis platform. Built
 
 This project extends the Directed Acyclic Graph (DAG) multi-agent orchestrator from [Shopping-Agent-V3-with-DAG](https://github.com/pradeepelavarasan/Shopping-Agent-V3-with-DAG) with an interactive, multi-layered Playwright browser-driving cascade.
 
+🎥 YouTube Demo: https://youtu.be/tkbn3P2-srM
+
 ---
 
 ## DAG-Based Architecture
