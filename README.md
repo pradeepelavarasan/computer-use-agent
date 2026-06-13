@@ -8,7 +8,7 @@ This project extends the Directed Acyclic Graph (DAG) multi-agent orchestrator f
 
 ## DAG-Based Architecture
 
-This system inherits and expands upon the robust concurrent DAG (Directed Acyclic Graph) architecture of the original [Shopping-Agent-V3-with-DAG](https://github.com/pradeepelavarasan/Shopping-Agent-V3-with-DAG). 
+This system inherits and expands upon the robust concurrent DAG (Directed Acyclic Graph) architecture of the original [Shopping-Agent-V3-with-DAG](https://github.com/pradeepelavarasan/Shopping-Agent-V3-with-DAG).
 
 1. **Planner**: Receives the user query, decides the execution plan, and compiles the graph structure.
 2. **Browser (Search, Filter, & Extraction)**: Handles the initial browser navigation, search queries, applying filters (like delivery checkboxes or discount links) on the e-commerce site, and extracting the raw product listing data.
@@ -19,10 +19,6 @@ This system inherits and expands upon the robust concurrent DAG (Directed Acycli
 7. **Product Recommendation**: Aggregates analyst reports, evaluates product trade-offs across the five core evaluation dimensions, and selects the top recommendation.
 8. **Formatter**: Structures and emits the final JSON matching the target schema.
 
-
-
-
-
 ---
 
 ## Browser Agent Cascade (Four Parts)
@@ -30,7 +26,6 @@ This system inherits and expands upon the robust concurrent DAG (Directed Acycli
 To interact with pages, the Browser Agent utilizes a highly optimized four-layered cascade, dynamically escalating from the most cost-effective method to the most advanced visual model depending on task complexity and page responsiveness:
 
 ![4 Layer Browser Automation](assets/4%20Layer%20Browser%20Automation.png)
-
 
 ### Part 1: Layer 1: HTML Extraction (Trafilatura)
 * **Description**: Static HTTP GET request using `httpx` and parsed using `trafilatura`.
@@ -91,7 +86,7 @@ The Browser cascade chose the **VISION** interaction path.
 
 **Outcome:** `ok`
 
-![Turn 1 Page State](logs/s9-2026-06-13_04-56-56/screenshots/n_2_turn_01_raw.png)
+![Turn 1 Page State](assets/Demo1_turn_01_raw.png)
 
 ###### Turn 2
 **Thinking:** 
@@ -101,7 +96,7 @@ The Browser cascade chose the **VISION** interaction path.
 
 **Outcome:** `ok`
 
-![Turn 2 Page State](logs/s9-2026-06-13_04-56-56/screenshots/n_2_turn_02_raw.png)
+![Turn 2 Page State](assets/Demo1_turn_02_raw.png)
 
 ###### Turn 3
 **Thinking:** 
@@ -111,7 +106,7 @@ The Browser cascade chose the **VISION** interaction path.
 
 **Outcome:** `done(True)`
 
-![Turn 3 Page State](logs/s9-2026-06-13_04-56-56/screenshots/n_2_turn_03_raw.png)
+![Turn 3 Page State](assets/Demo1_turn_03_raw.png)
 
 ##### 5. Extracted Shortlist Data
 
@@ -323,7 +318,7 @@ The Browser cascade chose the **VISION** interaction path.
 
 **Outcome:** `ok`
 
-![Turn 1 Page State](logs/s9-2026-06-13_05-43-40/screenshots/n_2_turn_01_raw.png)
+![Turn 1 Page State](assets/Demo2_turn_01_raw.png)
 
 ###### Turn 2
 **Thinking:** 
@@ -333,7 +328,7 @@ The Browser cascade chose the **VISION** interaction path.
 
 **Outcome:** `ok`
 
-![Turn 2 Page State](logs/s9-2026-06-13_05-43-40/screenshots/n_2_turn_02_raw.png)
+![Turn 2 Page State](assets/Demo2_turn_02_raw.png)
 
 ###### Turn 3
 **Thinking:** 
@@ -343,7 +338,7 @@ The Browser cascade chose the **VISION** interaction path.
 
 **Outcome:** `ok`
 
-![Turn 3 Page State](logs/s9-2026-06-13_05-43-40/screenshots/n_2_turn_03_raw.png)
+![Turn 3 Page State](assets/Demo2_turn_03_raw.png)
 
 ###### Turn 4
 **Thinking:** 
@@ -353,7 +348,7 @@ The Browser cascade chose the **VISION** interaction path.
 
 **Outcome:** `ok`
 
-![Turn 4 Page State](logs/s9-2026-06-13_05-43-40/screenshots/n_2_turn_04_raw.png)
+![Turn 4 Page State](assets/Demo2_turn_04_raw.png)
 
 ###### Turn 5
 **Thinking:** 
@@ -363,7 +358,7 @@ The Browser cascade chose the **VISION** interaction path.
 
 **Outcome:** `ok`
 
-![Turn 5 Page State](logs/s9-2026-06-13_05-43-40/screenshots/n_2_turn_05_raw.png)
+![Turn 5 Page State](assets/Demo2_turn_05_raw.png)
 
 ###### Turn 6
 **Thinking:** 
@@ -373,7 +368,7 @@ The Browser cascade chose the **VISION** interaction path.
 
 **Outcome:** `done(True)`
 
-![Turn 6 Page State](logs/s9-2026-06-13_05-43-40/screenshots/n_2_turn_06_raw.png)
+![Turn 6 Page State](assets/Demo2_turn_06_raw.png)
 
 ##### 5. Extracted Shortlist Data
 
@@ -585,7 +580,7 @@ The Browser cascade chose the **VISION** interaction path.
 
 **Outcome:** `ok | selected option 'Sell'`
 
-![Turn 1 Page State](logs/s9-2026-06-13_06-01-31/screenshots/n_2_turn_01_raw.png)
+![Turn 1 Page State](assets/Demo3_turn_01_raw.png)
 
 ###### Turn 2
 **Thinking:** 
@@ -595,7 +590,7 @@ The Browser cascade chose the **VISION** interaction path.
 
 **Outcome:** `ok`
 
-![Turn 2 Page State](logs/s9-2026-06-13_06-01-31/screenshots/n_2_turn_02_raw.png)
+![Turn 2 Page State](assets/Demo3_turn_02_raw.png)
 
 ###### Turn 3
 **Thinking:** 
@@ -605,7 +600,7 @@ The Browser cascade chose the **VISION** interaction path.
 
 **Outcome:** `ok`
 
-![Turn 3 Page State](logs/s9-2026-06-13_06-01-31/screenshots/n_2_turn_03_raw.png)
+![Turn 3 Page State](assets/Demo3_turn_03_raw.png)
 
 ###### Turn 4
 **Thinking:** 
@@ -615,7 +610,7 @@ The Browser cascade chose the **VISION** interaction path.
 
 **Outcome:** `done(True)`
 
-![Turn 4 Page State](logs/s9-2026-06-13_06-01-31/screenshots/n_2_turn_04_raw.png)
+![Turn 4 Page State](assets/Demo3_turn_04_raw.png)
 
 ##### 5. Extracted Shortlist Data
 
