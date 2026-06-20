@@ -116,3 +116,89 @@ I have successfully created a new Microsoft Word document containing a paragraph
 | **TOTAL** | | | | | **20,724 ms** | **116** | **75** |
 
 ---
+
+### 2. Create a Paneer Butter Masala Shopping List in Notes (HOTKEYS)
+
+### Session Log: s9-2026-06-20_09-31-29
+
+#### 1. Original User Goal
+> Can you search online to understand the ingredients for making paneer butter masala? Based on that, create a shopping list as a new note in my notes app on my mac.
+
+![Task Initiated](assets/2.%20Task%20Initiated.png)
+
+#### 2. Planner DAG
+![Planner DAG](assets/2.%20DAG.png)
+
+#### 3. Computer Path Chosen
+The Computer cascade chose the **HOTKEYS** interaction path.
+
+#### 4. Computer Actions
+
+**App:** Notes  
+**Goal:** Create a new note titled 'Paneer Butter Masala Shopping List' and add the list of ingredients obtained from the research.
+
+**Layer 2 — AppleScript (attempted, fell through):**
+```
+SCAN complete: element_count=441
+```
+
+**Layer 3 — Hotkeys:**
+```
+generated 18 keystrokes for goal
+SCAN complete: element_count=441
+VERIFY: element_count=442
+```
+
+**Keystrokes / Actions:**
+- `cmd+n`
+- type `Paneer Butter Masala Shopping List`
+- `Return`
+- type `- 200g Paneer`
+- `Return`
+- type `- 3 Tomatoes`
+- `Return`
+- type `- 1 Onion`
+- `Return`
+- type `- 1/2 cup Cashews`
+- `Return`
+- type `- 1 tbsp Ginger Garlic Paste`
+- `Return`
+- type `- 1/2 cup Cream`
+- `Return`
+- type `- 1 tsp Butter`
+- `Return`
+- type `- Spices: Chili powder, Garam masala, Turmeric, Salt`
+
+**Result:** Paneer Butter Masala Shopping List
+
+#### 5. Final Result
+
+I have successfully searched for the ingredients for Paneer Butter Masala and created a new note on your Mac titled 'Paneer Butter Masala Shopping List' containing the following items:
+
+- 200g Paneer
+- 3 Tomatoes
+- 1 Onion
+- 1/2 cup Cashews
+- 1 tbsp Ginger Garlic Paste
+- 1/2 cup Cream
+- 1 tsp Butter
+- Spices: Chili powder, Garam masala, Turmeric, Salt
+
+Source: https://www.indianhealthyrecipes.com/paneer-butter-masala-restaurant-style/
+
+![Proof of Completion](assets/2.%20Proof%20of%20Completion.png)
+
+![Task Completed](assets/2.%20Task%20Completed.png)
+
+#### 6. Performance Summary
+
+| Node | Skill | Status | Provider | Model | Duration | Tokens In | Tokens Out |
+|---|---|---|---|---|---|---|---|
+| `n:1` | planner | ✓ complete | gemini_lite_2 | — | 1,953 ms | 0 | 0 |
+| `n:2` | researcher | ✓ complete | gemini_lite_2 | — | 23,551 ms | 0 | 0 |
+| `n:3` | computer | ✓ complete | gemini_lite_2 | gemini-3.1-flash-lite | 5,579 ms | 395 | 198 |
+| `n:4` | formatter | ✓ complete | gemini_lite_2 | — | 1,701 ms | 0 | 0 |
+| `n:5` | critic | ✓ complete | gemini_lite_2 | gemini-3.1-flash-lite | 6,918 ms | 395 | 198 |
+| **TOTAL** | | | | | **39,702 ms** | **790** | **396** |
+
+---
