@@ -69,10 +69,7 @@ We showcase the computer agent's capabilities across native macOS desktop applic
 
 ---
 
-### 1. Create a Word Document about Harry Potter
-
-#### Initial State
-![Task Initiated](assets/1.%20Task%20initiated.png)
+### 1. Create a Word Document about Harry Potter (APPLESCRIPT)
 
 #### Execution Log & DAG
 
@@ -80,6 +77,8 @@ We showcase the computer agent's capabilities across native macOS desktop applic
 
 ##### 1. Original User Goal
 > Create a new Word document and insert a paragraph about Harry Potter.
+
+![Task Initiated](assets/1.%20Task%20initiated.png)
 
 ##### 2. Planner DAG
 ![Planner DAG](assets/1.%20DAG.png)
