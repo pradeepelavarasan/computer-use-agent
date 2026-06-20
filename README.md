@@ -65,6 +65,57 @@ The cascade tries each layer in order and stops at the first success, always esc
 
 ## Interactive Examples
 
-*(Coming soon — examples will document real task sessions across different macOS application types, demonstrating which layer the cascade chose and why.)*
+We showcase the computer agent's capabilities across native macOS desktop applications, demonstrating different interaction paths through the five-layer cascade.
+
+---
+
+### 1. Create a Word Document about Harry Potter
+
+#### Initial State
+![Task Initiated](assets/1.%20Task%20initiated.png)
+
+#### Execution Log & DAG
+
+#### Session Log: s9-2026-06-20_08-53-41
+
+##### 1. Original User Goal
+> Create a new Word document and insert a paragraph about Harry Potter.
+
+##### 2. Planner DAG
+![Planner DAG](assets/1.%20DAG.png)
+
+##### 3. Computer Path Chosen
+The Computer cascade chose the **APPLESCRIPT** interaction path.
+
+##### 4. Computer Actions
+
+**App:** Microsoft Word  
+**Goal:** Create a new blank document, type a paragraph about Harry Potter, and save the document.
+
+**Layer 2 — AppleScript:**
+```
+SCAN complete: element_count=503
+VERIFY: element_count=525
+```
+
+**Result:** Created and saved Harry Potter document
+
+##### 5. Final Result
+
+I have successfully created a new Microsoft Word document containing a paragraph about Harry Potter and saved the file.
+
+![Proof of Completion](assets/1.%20Proof%20of%20completion.png)
+
+![Task Completed](assets/1.%20Task%20Completed.png)
+
+##### 6. Performance Summary
+
+| Node | Skill | Status | Provider | Model | Duration | Tokens In | Tokens Out |
+|---|---|---|---|---|---|---|---|
+| `n:1` | planner | ✓ complete | gemini_lite_2 | — | 2,049 ms | 0 | 0 |
+| `n:2` | computer | ✓ complete | gemini_lite_1 | gemini-3.1-flash-lite | 13,120 ms | 116 | 75 |
+| `n:3` | formatter | ✓ complete | gemini_lite_2 | — | 4,530 ms | 0 | 0 |
+| `n:4` | critic | ✓ complete | gemini_lite_1 | — | 1,025 ms | 0 | 0 |
+| **TOTAL** | | | | | **20,724 ms** | **116** | **75** |
 
 ---
