@@ -71,22 +71,20 @@ We showcase the computer agent's capabilities across native macOS desktop applic
 
 ### 1. Create a Word Document about Harry Potter (APPLESCRIPT)
 
-#### Execution Log & DAG
+### Session Log: s9-2026-06-20_08-53-41
 
-#### Session Log: s9-2026-06-20_08-53-41
-
-##### 1. Original User Goal
+#### 1. Original User Goal
 > Create a new Word document and insert a paragraph about Harry Potter.
 
 ![Task Initiated](assets/1.%20Task%20initiated.png)
 
-##### 2. Planner DAG
+#### 2. Planner DAG
 ![Planner DAG](assets/1.%20DAG.png)
 
-##### 3. Computer Path Chosen
+#### 3. Computer Path Chosen
 The Computer cascade chose the **APPLESCRIPT** interaction path.
 
-##### 4. Computer Actions
+#### 4. Computer Actions
 
 **App:** Microsoft Word  
 **Goal:** Create a new blank document, type a paragraph about Harry Potter, and save the document.
@@ -99,7 +97,7 @@ VERIFY: element_count=525
 
 **Result:** Created and saved Harry Potter document
 
-##### 5. Final Result
+#### 5. Final Result
 
 I have successfully created a new Microsoft Word document containing a paragraph about Harry Potter and saved the file.
 
@@ -107,7 +105,7 @@ I have successfully created a new Microsoft Word document containing a paragraph
 
 ![Task Completed](assets/1.%20Task%20Completed.png)
 
-##### 6. Performance Summary
+#### 6. Performance Summary
 
 | Node | Skill | Status | Provider | Model | Duration | Tokens In | Tokens Out |
 |---|---|---|---|---|---|---|---|
