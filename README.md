@@ -103,7 +103,7 @@ I have successfully created a new Microsoft Word document containing a paragraph
 
 ![Proof of Completion](assets/1.%20Proof%20of%20completion.png)
 
-![Task Completed](assets/1.%20Task%20Completed.png)
+![Task Completed](assets/1.%20Task%20completed.png)
 
 #### 6. Performance Summary
 
