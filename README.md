@@ -111,8 +111,8 @@ I have successfully created a new Microsoft Word document containing a paragraph
 |---|---|---|---|---|---|---|---|
 | `n:1` | planner | ✓ complete | gemini_lite_2 | — | 2,049 ms | 0 | 0 |
 | `n:2` | computer | ✓ complete | gemini_lite_1 | gemini-3.1-flash-lite | 13,120 ms | 116 | 75 |
-| `n:3` | formatter | ✓ complete | gemini_lite_2 | — | 4,530 ms | 0 | 0 |
 | `n:4` | critic | ✓ complete | gemini_lite_1 | — | 1,025 ms | 0 | 0 |
+| `n:3` | formatter | ✓ complete | gemini_lite_2 | — | 4,530 ms | 0 | 0 |
 | **TOTAL** | | | | | **20,724 ms** | **116** | **75** |
 
 ---
@@ -197,8 +197,8 @@ Source: https://www.indianhealthyrecipes.com/paneer-butter-masala-restaurant-sty
 | `n:1` | planner | ✓ complete | gemini_lite_2 | — | 1,953 ms | 0 | 0 |
 | `n:2` | researcher | ✓ complete | gemini_lite_2 | — | 23,551 ms | 0 | 0 |
 | `n:3` | computer | ✓ complete | gemini_lite_2 | gemini-3.1-flash-lite | 5,579 ms | 395 | 198 |
-| `n:4` | formatter | ✓ complete | gemini_lite_2 | — | 1,701 ms | 0 | 0 |
 | `n:5` | critic | ✓ complete | gemini_lite_2 | gemini-3.1-flash-lite | 6,918 ms | 395 | 198 |
+| `n:4` | formatter | ✓ complete | gemini_lite_2 | — | 1,701 ms | 0 | 0 |
 | **TOTAL** | | | | | **39,702 ms** | **790** | **396** |
 
 ---
