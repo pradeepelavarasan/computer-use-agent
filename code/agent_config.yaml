@@ -1,0 +1,161 @@
+# Session 8 skills catalogue.
+#
+# Each entry below names one skill (the node "type" the orchestrator can
+# run). The two files that define a skill are this yaml entry and the
+# referenced `prompt:` markdown — there is no Python class per skill.
+#
+# Fields:
+#   prompt              path to the system prompt, relative to S8/code/
+#   description         one-line summary (shown in dashboards / replay)
+#   provider_pin        OPTIONAL preferred provider; overridden by
+#                       agent_routing.yaml in the gateway if set there.
+#                       Most pins live in the gateway side, not here.
+#   tools_allowed       which MCP tools this skill may call. Empty list
+#                       means the skill is text-only and never calls a
+#                       tool through the gateway's tool-use channel.
+#   internal_successors STATIC graph extension. Whenever this skill
+#                       finishes, the orchestrator adds these skills as
+#                       successor nodes regardless of what the skill
+#                       itself emitted in AgentResult.successors. Used
+#                       by Coder → SandboxExecutor.
+#   critic              When true, the orchestrator inserts a Critic
+#                       node on every outgoing edge from this skill.
+#                       Used by Distiller.
+#
+# Anything declared under `metadata:` is opaque to the orchestrator; the
+# skill is free to interpret its own metadata however it wants.
+
+planner:
+  prompt: prompts/planner.md
+  tools_allowed: []
+  temperature: 1        # decompositions need a little breathing room
+  max_tokens: 4000
+  description: Decomposes user queries into the initial DAG and synthesises recovery subgraphs on node failure.
+
+retriever:
+  prompt: prompts/retriever.md
+  tools_allowed: [search_knowledge]
+  temperature: 1        # retrieval is mostly deterministic
+  max_tokens: 4000
+  description: Searches Memory and the FAISS index for material relevant to a query.
+
+researcher:
+  prompt: prompts/researcher.md
+  tools_allowed: [web_search, fetch_url]
+  temperature: 1        # exploratory; let the model choose phrasings
+  max_tokens: 4000
+  description: Performs multi-step web research and produces normalised text outputs.
+
+distiller:
+  prompt: prompts/distiller.md
+  critic: true
+  temperature: 1        # extraction
+  max_tokens: 4000
+  description: Extracts structured fields from raw text or page content.
+
+summariser:
+  prompt: prompts/summariser.md
+  temperature: 1
+  max_tokens: 4000
+  description: Condenses long content into a short form.
+
+critic:
+  prompt: prompts/critic.md
+  temperature: 1        # pass/fail; we want determinism
+  max_tokens: 4000
+  description: Evaluates an upstream node's output; emits pass or fail with rationale.
+
+formatter:
+  prompt: prompts/formatter.md
+  temperature: 1
+  max_tokens: 4000
+  description: Renders the final answer for the user. Conventional terminal node — its output.final_answer is what the executor returns.
+
+sandbox_executor:
+  prompt: prompts/sandbox_executor.md
+  temperature: 1
+  max_tokens: 4000
+  description: Runs code from a Coder node in the sandbox and returns stdout, stderr, exit code, and any generated files.
+
+coder:
+  prompt: prompts/coder.md
+  internal_successors: [sandbox_executor]
+  temperature: 1
+  max_tokens: 4000
+  description: STUB. Student assignment for Session 8. Emits Python code; the orchestrator hands it to sandbox_executor next.
+
+browser:
+  prompt: prompts/browser.md
+  # The Browser skill does not go through the standard LLM-call dispatch.
+  # It owns its own cascade (HTML extract → a11y text → vision SoM) and
+  # routes each layer's gateway call internally. temperature / max_tokens
+  # are kept here for registry uniformity but the dispatcher ignores them.
+  temperature: 1
+  max_tokens: 4000
+  description: |
+    Fetches and interacts with web pages through a four-layer cascade
+    (extract, deterministic, a11y, vision). Inputs in metadata: url
+    (required) and goal (required). Returns BrowserOutput with the
+    chosen layer surfaced as output.path. Use when Researcher's
+    fetch_url is insufficient: JavaScript-rendered content, interactive
+    widgets, multi-page workflows.
+
+# ── Shopping skills (Session 9) ───────────────────────────────────────────────
+# Three-step pipeline: shortlister → analyst×3 → recommendation
+# All skills are pure text-parsers (tools_allowed: []) fed by browser nodes.
+# No playwright_fetch, no coder/sandbox, no two-phase prompts.
+
+product_shortlister:
+  prompt: prompts/product_shortlister.md
+  tools_allowed: []
+  critic: true          # orchestrator auto-inserts a critic after every shortlister node
+  temperature: 0.2      # extraction task — low temperature for determinism
+  max_tokens: 4000
+  description: >
+    Shopping step 1. Receives BrowserOutput.content from an upstream browser
+    node (Amazon search results page). Parses product listings, sorts by
+    reviews_count descending, picks top 3, and extracts image URLs from
+    m.media-amazon.com/images/ URLs in the content. A Critic auto-gates
+    the downstream fan-out to protect all 6 browser+analyst nodes from bad data.
+
+product_analyst:
+  prompt: prompts/product_analyst.md
+  tools_allowed: []
+  temperature: 0.2
+  max_tokens: 4000
+  description: >
+    Shopping step 2. Receives BrowserOutput.content from an upstream browser
+    node (single product detail page). QUESTION metadata carries the product
+    ASIN. Evaluates across 5 criteria (CUSTOMER SENTIMENT, RELIABILITY, VALUE
+    FOR MONEY, FEATURE COMPLETENESS, BUILD QUALITY) and extracts image_url.
+
+product_recommendation:
+  prompt: prompts/product_recommendation.md
+  tools_allowed: []
+  temperature: 0.2
+  max_tokens: 4000
+  description: >
+    Shopping step 3. Receives the product_shortlister output (3 products with
+    metadata) and three product_analyst outputs (evaluations per product).
+    Selects the top recommendation, writes the overall_agent_summary, and emits
+    the complete {products, analysis, task} JSON the frontend renders.
+
+# ── Session 10: Computer skill ───────────────────────────────────────────────
+computer:
+  prompt: prompts/computer.md
+  tools_allowed: []        # bypass skill — dispatch goes directly to ComputerSkill.run()
+  temperature: 0.2
+  max_tokens: 4000
+  internal_successors: []
+  critic: true             # auto-inserts a critic node after every computer node;
+                           # formatter only runs after critic passes, preventing the
+                           # formatter from seeing raw failure output
+  description: >
+    Session 10. Drives native macOS apps using a 5-layer cascade:
+    (1) Extract — passive AX read, no LLM;
+    (2) AppleScript — scriptable apps (Mail, Notes, Calendar…), one LLM call;
+    (3) Deterministic hotkeys — planner-supplied keystrokes, zero LLM;
+    (4) AX tree + LLM — Scan-Act-Verify loop with cheap text LLM;
+    (5) Vision / Set-of-Marks — screenshot + vision LLM for canvas apps.
+    Layers 1/4/5 need cua-driver; Layers 2/3 work on any Mac.
+    NodeSpec.metadata keys: app_name, bundle_id, goal, hotkeys, force_path.
