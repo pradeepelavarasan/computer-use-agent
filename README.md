@@ -241,9 +241,27 @@ After: Search overlay opens
 
 ---
 
-**Turn 3 — Navigate to contact**
+**Turn 2 — First Down arrow**
 
-Action: `press Down` × 2
+Before: Search overlay open, no results yet
+
+![](assets/3.%20scan%20t01.png)
+
+Action: `press Down`
+
+After: First result highlighted
+
+![](assets/3.%20verify%20t01.png)
+
+---
+
+**Turn 3 — Second Down arrow**
+
+Before: First search result highlighted
+
+![](assets/3.%20scan%20t02.png)
+
+Action: `press Down`
 
 After: Puneeth highlighted in results, ready to open
 
@@ -252,6 +270,10 @@ After: Puneeth highlighted in results, ready to open
 ---
 
 **Turn 4 — Open chat**
+
+Before: Puneeth highlighted in search results
+
+![](assets/3.%20scan%20t03.png)
 
 Action: `press Return`
 
@@ -262,6 +284,10 @@ After: Puneeth's chat opened, compose field visible
 ---
 
 **Turn 5 — Type the message**
+
+Before: Puneeth's chat open, compose field empty
+
+![](assets/3.%20scan%20t04.png)
 
 Action: `type "Lets catch this sunday at 6pm"`
 
@@ -283,7 +309,7 @@ Before: Compose field with message, send icon visible bottom-right
 
 Action: `click bbox [954, 973, 981, 995]`
 
-After (verify): Send icon still visible — click did not register
+After: Send icon still visible — click did not register
 
 ![](assets/3.%20verify%20t05.png)
 
@@ -291,9 +317,13 @@ After (verify): Send icon still visible — click did not register
 
 **Turn 7**
 
+Before: Same state — send icon still present
+
+![](assets/3.%20scan%20t06.png)
+
 Action: `click bbox [947, 966, 984, 994]` *(adjusted coordinates, second attempt)*
 
-After (verify): State unchanged — click still not registering
+After: State unchanged — click still not registering
 
 ![](assets/3.%20verify%20t06.png)
 
@@ -307,7 +337,7 @@ Before: Model switches strategy from click to keyboard
 
 Action: `press Down`
 
-After (verify): Focus confirmed on send — next step is Enter
+After: Focus confirmed on send — next step is Enter
 
 ![](assets/3.%20verify%20t07.png)
 
