@@ -139,3 +139,23 @@ product_recommendation:
     metadata) and three product_analyst outputs (evaluations per product).
     Selects the top recommendation, writes the overall_agent_summary, and emits
     the complete {products, analysis, task} JSON the frontend renders.
+
+# ── Session 10: Computer skill ───────────────────────────────────────────────
+computer:
+  prompt: prompts/computer.md
+  tools_allowed: []        # bypass skill — dispatch goes directly to ComputerSkill.run()
+  temperature: 0.2
+  max_tokens: 4000
+  internal_successors: []
+  critic: true             # auto-inserts a critic node after every computer node;
+                           # formatter only runs after critic passes, preventing the
+                           # formatter from seeing raw failure output
+  description: >
+    Session 10. Drives native macOS apps using a 5-layer cascade:
+    (1) Extract — passive AX read, no LLM;
+    (2) AppleScript — scriptable apps (Mail, Notes, Calendar…), one LLM call;
+    (3) Deterministic hotkeys — planner-supplied keystrokes, zero LLM;
+    (4) AX tree + LLM — Scan-Act-Verify loop with cheap text LLM;
+    (5) Vision / Set-of-Marks — screenshot + vision LLM for canvas apps.
+    Layers 1/4/5 need cua-driver; Layers 2/3 work on any Mac.
+    NodeSpec.metadata keys: app_name, bundle_id, goal, hotkeys, force_path.

@@ -25,3 +25,10 @@ Rules:
     to the user rather than inventing.
   - Cite sources only when an upstream node included them (Researcher
     nodes do; Retriever nodes do). Do not invent URLs.
+  - CRITICAL — if INPUTS contains only USER_QUERY and no skill results
+    (no computer, browser, researcher, or retriever output), do NOT
+    claim you cannot do the task and do NOT make up capability statements.
+    Instead say exactly:
+    "The task could not be completed in this attempt. The system is
+     retrying automatically."
+    Do not reference memory, prior sessions, or what you think you can do.

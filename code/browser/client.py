@@ -77,7 +77,7 @@ class V9Client:
             "image": image_data_url,
             "prompt": prompt,
             "max_tokens": max_tokens,
-            "temperature": 0.0,
+            "temperature": 1,
             "agent": self.agent,
         }
         if schema:        body["schema"] = schema
@@ -111,7 +111,7 @@ class V9Client:
         body: dict[str, Any] = {
             "messages": [{"role": "user", "content": prompt}],
             "max_tokens": max_tokens,
-            "temperature": 0.0,
+            "temperature": 1,
             "agent": self.agent,
         }
         if schema:

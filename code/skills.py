@@ -356,6 +356,35 @@ async def run_skill(skill: Skill, node_id: str, graph_nodes,
             result.elapsed_s = time.time() - started
         return result, rendered
 
+    if skill.name == "computer":
+        # Session 10: Computer skill bypass — same pattern as browser skill.
+        # ComputerSkill owns the 4-layer cascade (passive extract → deterministic
+        # AppleScript/hotkeys → A11y+LLM → Vision) and the Scan-Act-Verify loop.
+        node_dict = graph_nodes[node_id]
+        node_spec = NodeSpec(
+            skill="computer",
+            inputs=node_dict.get("inputs") or [],
+            metadata=node_dict.get("metadata") or {},
+        )
+        from computer.skill import ComputerSkill
+        sk = ComputerSkill(
+            artifacts_root=str(ROOT / "state" / "sessions" / session_id / "computer"),
+            session=session_id,
+        )
+        result = await sk.run(node_spec)
+        if not result.elapsed_s:
+            result.elapsed_s = time.time() - started
+
+        # Mirror vision screenshots into the session log folder so they appear
+        # alongside the run log and node JSON for easy inspection.
+        import shutil as _shutil
+        _art_src = ROOT / "state" / "sessions" / session_id / "computer"
+        _log_dst = ROOT.parent / "logs" / session_id / "screenshots"
+        if _art_src.exists():
+            _shutil.copytree(str(_art_src), str(_log_dst), dirs_exist_ok=True)
+
+        return result, rendered
+
     tools = tool_payload(skill.tools_allowed)
     if tools:
         # Multi-turn tool-use loop. mcp_runner opens one MCP stdio session

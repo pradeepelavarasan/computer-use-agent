@@ -118,6 +118,9 @@ ErrorCode = Literal[
     "interaction_failed",    # could not complete the goal within turn cap
     "timeout",               # wall-clock cap hit
     "vlm_unavailable",       # all vision providers refused or 503'd
+    # Session 10: computer skill codes
+    "server_unavailable",    # cua-driver daemon not reachable
+    "precondition_failed",   # empty AX tree / permissions not granted
 ]
 
 
@@ -154,6 +157,32 @@ class BrowserOutput(BaseModel):
     content: str | None = None
     actions: list[dict] = Field(default_factory=list)
     final_url: str | None = None
+
+
+class ComputerOutput(BaseModel):
+    """Session 10: typed payload the Computer skill writes into AgentResult.output.
+
+    `path` identifies which of the 5 cascade layers succeeded:
+        extract      — Layer 1: passive AX read (read-only goals)
+        applescript  — Layer 2: AppleScript scripting dictionary
+        hotkeys      — Layer 3: planner-supplied deterministic keystrokes
+        a11y         — Layer 4: AX tree + cheap LLM (Scan-Act-Verify)
+        vision       — Layer 5: screenshot + vision LLM (Set-of-Marks)
+    """
+
+    app: str
+    goal: str
+    path: Literal[
+        "extract",
+        "applescript",
+        "hotkeys",
+        "a11y",
+        "vision",
+    ]
+    turns: int = 0
+    content: str | None = None
+    actions: list[dict] = Field(default_factory=list)
+    error_code: str | None = None
 
 
 class NodeState(BaseModel):

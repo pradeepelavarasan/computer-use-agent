@@ -9,7 +9,7 @@ on-5xx carry forward unchanged.
 The session-version mapping (V9 for Session 9) lets V8 stay frozen for
 Session 8.
 
-Auto-starts the gateway on port 8109 if it is not already up, then
+Auto-starts the gateway on port 8110 if it is not already up, then
 re-exports the V9 `LLM` client and a module-level `embed()` helper.
 """
 
@@ -22,7 +22,7 @@ from pathlib import Path
 import httpx
 
 GATEWAY_V9_DIR = Path(__file__).resolve().parents[1] / "gateway"
-GATEWAY_URL = "http://localhost:8109"
+GATEWAY_URL = "http://localhost:8110"
 
 
 def _is_up() -> bool:

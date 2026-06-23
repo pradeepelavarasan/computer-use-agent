@@ -20,12 +20,19 @@ Videos/
 *.mp4
 *.mov
 
-# Databases
+# Databases and runtime state
 *.db
 *.sqlite
+gateway/.env
+gateway/__pycache__/
+gateway/.venv/
+gateway/uv.lock
 
 # Test fixtures and unit tests — do not commit to GitHub
 test/
+test_*.py
+test_*.png
+test_*.jpg
 
 # macOS
 .DS_Store

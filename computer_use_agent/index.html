@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Computer Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/results.css" />
+</head>
+
+<body>
+
+  <!-- ── SEARCH VIEW ──────────────────────────────────────────────────────────── -->
+  <div id="searchView" class="view active">
+    <div class="search-container">
+      <div class="search-header">
+        <div class="logo-area">
+          <span class="logo-icon">🖥️</span>
+          <h1 class="logo-text">Computer-Use Agent</h1>
+        </div>
+        <button class="hood-btn" onclick="openGraphViewer()" title="See what's happening inside">
+          ⚙️ How do I work?
+        </button>
+      </div>
+
+      <div class="search-box-wrapper">
+        <div class="search-box">
+          <textarea id="queryInput" class="search-input" placeholder="Tell me what to do on your Mac… " rows="2"
+            autofocus></textarea>
+          <button class="search-btn" onclick="submitSearch()" title="Run task">
+            <span class="search-icon">▶</span>
+          </button>
+        </div>
+      </div>
+
+      <p class="search-hint">Describe any desktop task — Calculator, Notes, Mail, VS Code, Finder…</p>
+    </div>
+  </div>
+
+  <!-- ── LOADING VIEW ──────────────────────────────────────────────────────────── -->
+  <div id="loadingView" class="view">
+    <div class="loading-container">
+      <div class="loading-header">
+        <span class="logo-icon">🖥️</span>
+        <h2 class="loading-title">Working on it…</h2>
+        <button class="hood-btn" id="loadingHoodBtn" onclick="openGraphViewer()" title="Watch live DAG">
+          ⚙️ Watch live
+        </button>
+      </div>
+
+      <div class="ai-bars">
+        <div class="bar bar1"></div>
+        <div class="bar bar2"></div>
+        <div class="bar bar3"></div>
+        <div class="bar bar4"></div>
+        <div class="bar bar5"></div>
+      </div>
+
+      <p id="loadingMessage" class="loading-message">Initializing agentic DAG loop…</p>
+      <p id="loadingQuery" class="loading-query"></p>
+
+      <button class="stop-btn" onclick="stopTask()">⏹ Stop task</button>
+    </div>
+  </div>
+
+  <!-- ── RESULT VIEW ───────────────────────────────────────────────────────────── -->
+  <div id="resultView" class="view">
+    <div class="result-container">
+      <div class="result-header">
+        <div class="logo-area">
+          <span class="logo-icon">🖥️</span>
+          <h1 class="logo-text">Computer Agent</h1>
+        </div>
+        <button class="hood-btn" onclick="openGraphViewer()" title="Inspect the DAG">
+          ⚙️ How do I work?
+        </button>
+      </div>
+
+      <div id="resultCard" class="result-card">
+        <div class="result-status">
+          <span id="resultIcon">✅</span>
+          <span id="resultStatusText">Task complete</span>
+        </div>
+        <pre id="resultText" class="result-text"></pre>
+      </div>
+
+      <button class="new-task-btn" onclick="resetToSearch()">↩ New Task</button>
+    </div>
+  </div>
+
+  <!-- ── ERROR VIEW ────────────────────────────────────────────────────────────── -->
+  <div id="errorView" class="view">
+    <div class="error-container">
+      <div class="error-icon">⚠️</div>
+      <h2 class="error-title">Could not complete task</h2>
+      <p id="errorMessage" class="error-message"></p>
+      <button class="back-btn" onclick="resetToSearch()">↩ Try Again</button>
+    </div>
+  </div>
+
+  <script>
+    let _sessionId = null;
+
+    const LOADING_MESSAGES = [
+      "Initializing agentic DAG loop…",
+      "Planner decomposing your task…",
+      "Activating app via AppleScript…",
+      "Running computer skill cascade…",
+      "Trying deterministic hotkeys (Layer 2a)…",
+      "Reading AX accessibility tree (Layer 2b)…",
+      "Verifying action with post-scan…",
+      "Formatter compiling final result…",
+    ];
+
+    function showView(id) {
+      document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    function resetToSearch() {
+      _sessionId = null;
+      document.getElementById("queryInput").value = "";
+      showView("searchView");
+      setTimeout(() => document.getElementById("queryInput").focus(), 100);
+    }
+
+    function submitSearch() {
+      const query = document.getElementById("queryInput").value.trim();
+      if (!query) return;
+      startTask(query);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("queryInput").addEventListener("keydown", e => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          submitSearch();
+        }
+      });
+    });
+
+    async function startTask(query) {
+      document.getElementById("loadingQuery").textContent = `"${query}"`;
+      showView("loadingView");
+      startLoadingMessages();
+
+      try {
+        const response = await fetch("/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query }),
+        });
+
+        const data = await response.json();
+        stopLoadingMessages();
+
+        if (data.session_id) _sessionId = data.session_id;
+
+        if (!data.success || data.error) {
+          showError(data.error || "Unknown error from agent.");
+          return;
+        }
+
+        showResult(data.result || "Done.");
+
+      } catch (err) {
+        stopLoadingMessages();
+        showError(`Network error: ${err.message}`);
+      }
+    }
+
+    function showResult(text) {
+      document.getElementById("resultIcon").textContent = "✅";
+      document.getElementById("resultStatusText").textContent = "Task complete";
+      document.getElementById("resultText").textContent = text;
+      document.getElementById("resultCard").className = "result-card success";
+      showView("resultView");
+    }
+
+    function showError(message) {
+      document.getElementById("errorMessage").textContent = message;
+      showView("errorView");
+    }
+
+    let _msgInterval = null, _msgIndex = 0;
+
+    function startLoadingMessages() {
+      _msgIndex = 0;
+      const el = document.getElementById("loadingMessage");
+      el.textContent = LOADING_MESSAGES[0];
+      _msgInterval = setInterval(() => {
+        _msgIndex = (_msgIndex + 1) % LOADING_MESSAGES.length;
+        el.style.opacity = "0";
+        setTimeout(() => {
+          el.textContent = LOADING_MESSAGES[_msgIndex];
+          el.style.opacity = "1";
+        }, 300);
+      }, 3500);
+    }
+
+    function stopLoadingMessages() {
+      if (_msgInterval) { clearInterval(_msgInterval); _msgInterval = null; }
+    }
+
+    function openGraphViewer() {
+      const url = _sessionId
+        ? `/graph?session_id=${encodeURIComponent(_sessionId)}`
+        : "/graph";
+      window.open(url, "_blank");
+    }
+
+    async function stopTask() {
+      try {
+        await fetch("/api/stop", { method: "POST" });
+      } catch (_) { }
+      stopLoadingMessages();
+      showError("Task was stopped.");
+    }
+  </script>
+</body>
+
+</html>

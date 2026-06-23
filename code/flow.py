@@ -293,6 +293,36 @@ class Executor:
                               f"skill={failed_skill}): {decision.note}")
                         continue
                     # action == "replan"
+                    # Computer-node cap: never queue more than 3 computer node
+                    # attempts (1 initial + 2 recoveries) for a single run.
+                    # Each additional attempt keeps modifying the user's desktop
+                    # without meaningful improvement once the cascade is exhausted.
+                    if failed_skill == "computer":
+                        computer_attempts = sum(
+                            1 for _n, _d in graph.g.nodes(data=True)
+                            if _d.get("skill") == "computer"
+                        )
+                        if computer_attempts >= 3:
+                            print(f"  ↪ computer-node cap (3) reached — queuing formatter for {nid}")
+                            # Don't leave the run without a user-facing answer.
+                            # Queue a formatter so the user gets a clear message
+                            # instead of seeing raw internal JSON.
+                            has_formatter = any(
+                                d.get("skill") == "formatter"
+                                for _, d in graph.g.nodes(data=True)
+                            )
+                            if not has_formatter:
+                                graph.add_node(
+                                    "formatter", inputs=["USER_QUERY"],
+                                    metadata={
+                                        "failure_report": (
+                                            f"Computer task exhausted all 3 attempts. "
+                                            f"Last error: {result.error or 'max_steps reached'}"
+                                        )
+                                    },
+                                )
+                            continue
+
                     # Recovery Planner amnesia fix: pass the ids of nodes that
                     # have already completed successfully so the recovery
                     # Planner can wire them by id in its successor plan

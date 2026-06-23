@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🖥️ Computer Agent — Live DAG</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style type="text/css">
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        body {
+            background: radial-gradient(circle at 50% 0%, #1a1c2d 0%, #08090f 100%);
+            color: #f1f5f9;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Glowing background decorative blobs */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0) 70%);
+            top: -100px;
+            right: -100px;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0) 70%);
+            bottom: -150px;
+            left: -150px;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        h2 {
+            margin-top: 0;
+            font-weight: 500;
+            font-size: 24px;
+            letter-spacing: -0.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1;
+        }
+        h2 .title-text {
+            background: linear-gradient(135deg, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Live status indicator in the title */
+        .live-badge {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            color: #94a3b8;
+            background: rgba(100, 116, 139, 0.1);
+            border: 1px solid rgba(100, 116, 139, 0.2);
+            transition: all 0.4s ease;
+        }
+        .live-badge .dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #64748b;
+            transition: all 0.4s ease;
+        }
+        .live-badge.running {
+            color: #818cf8;
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+        .live-badge.running .dot {
+            background: #818cf8;
+            animation: pulse-dot 0.9s infinite;
+        }
+        .live-badge.complete {
+            color: #34d399;
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+        .live-badge.complete .dot { background: #34d399; }
+        .live-badge.starting {
+            color: #fbbf24;
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.25);
+        }
+        .live-badge.starting .dot { background: #fbbf24; animation: pulse-dot 1s infinite; }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(0.65); }
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            gap: 0px;
+            height: calc(100vh - 130px);
+            min-height: 0;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-height: 0;
+            height: 100%;
+            padding-right: 12px;
+        }
+        .right-panel {
+            width: 400px;
+            background: rgba(15, 17, 28, 0.7);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+            box-sizing: border-box;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+        }
+        .resizer {
+            width: 16px;
+            cursor: col-resize;
+            background: transparent;
+            height: 100%;
+            position: relative;
+            z-index: 10;
+            margin: 0 -4px;
+        }
+        .resizer::after {
+            content: '';
+            position: absolute;
+            left: 7px;
+            width: 2px;
+            height: 40px;
+            top: calc(50% - 20px);
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .resizer:hover::after, .resizer.dragging::after {
+            background: #8b5cf6;
+            box-shadow: 0 0 10px #8b5cf6;
+            height: 60px;
+            width: 4px;
+            left: 6px;
+        }
+        #mynetwork {
+            flex: 1;
+            min-height: 400px;
+            height: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background-color: rgba(10, 11, 18, 0.5);
+            border-radius: 16px;
+            box-shadow: inset 0 4px 24px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+        .legend {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #94a3b8;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .query-container {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 16px 20px;
+            font-size: 15px;
+            line-height: 1.6;
+            border-left: 4px solid #8b5cf6;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        .query-label {
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1.5px;
+        }
+        
+        /* Details Panel Styling */
+        .details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 16px;
+            margin-bottom: 8px;
+        }
+        .details-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+            letter-spacing: -0.3px;
+        }
+        .close-panel-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #94a3b8;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .close-panel-btn:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            transform: scale(1.05);
+        }
+        .open-panel-btn {
+            position: absolute;
+            right: 24px;
+            bottom: 24px;
+            background: rgba(139, 92, 246, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 12px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            z-index: 1000;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+            box-shadow: 0 8px 32px rgba(139, 92, 246, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .open-panel-btn:hover {
+            background: #8b5cf6;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 36px rgba(139, 92, 246, 0.45);
+        }
+        .details-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .details-sec-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #94a3b8;
+            font-weight: 700;
+        }
+        .details-value {
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #cbd5e1;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+        .pre-container {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-height: 280px;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+        }
+        .status-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .status-complete {
+            background: rgba(16, 185, 129, 0.12);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.1);
+        }
+        .status-running {
+            background: rgba(245, 158, 11, 0.12);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.1);
+        }
+        .status-pending {
+            background: rgba(148, 163, 184, 0.12);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+        }
+        .status-failed {
+            background: rgba(239, 68, 68, 0.12);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.1);
+        }
+        .status-skipped {
+            background: rgba(239, 68, 68, 0.08);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        
+        /* Empty state */
+        .empty-details {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            color: #64748b;
+            text-align: center;
+            font-style: italic;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 0 20px;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+    </style>
+</head>
+<body>
+    <h2 id="page-title">
+        <span style="font-size:22px; line-height:1;">🧠</span>
+        <span class="title-text" id="title-text">Computer Agent — Live DAG</span>
+        <span class="live-badge starting" id="live-badge">
+            <span class="dot"></span>
+            <span id="badge-text">Starting...</span>
+        </span>
+    </h2>
+    
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="query-container" id="query-container">
+                <div class="query-label">Session Query</div>
+                <div id="query-text">Waiting for session...</div>
+            </div>
+            <div class="legend" id="legend-container">
+                <!-- populated by JS -->
+            </div>
+            <div id="mynetwork"></div>
+        </div>
+        <div class="resizer" id="drag-resizer"></div>
+        <div class="right-panel" id="details-panel">
+            <!-- Details will be rendered here dynamically -->
+        </div>
+        <button class="open-panel-btn" id="open-panel-btn" style="display: none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Show Details
+        </button>
+    </div>
+
+    <script type="text/javascript">
+        // ── Skill → color map (identical to persistence.py) ─────────────────────
+        const SKILL_COLORS = {
+            "planner":                {"background": "rgba(15, 23, 42, 0.8)", "border": "#3b82f6", "color": "#ffffff"},
+            "researcher":             {"background": "rgba(15, 23, 42, 0.8)", "border": "#10b981", "color": "#ffffff"},
+            "formatter":              {"background": "rgba(15, 23, 42, 0.8)", "border": "#8b5cf6", "color": "#ffffff"},
+            "coder":                  {"background": "rgba(15, 23, 42, 0.8)", "border": "#f59e0b", "color": "#ffffff"},
+            "sandbox_executor":       {"background": "rgba(15, 23, 42, 0.8)", "border": "#6366f1", "color": "#ffffff"},
+            "critic":                 {"background": "rgba(15, 23, 42, 0.8)", "border": "#ef4444", "color": "#ffffff"},
+            "retriever":              {"background": "rgba(15, 23, 42, 0.8)", "border": "#06b6d4", "color": "#ffffff"},
+            "summariser":             {"background": "rgba(15, 23, 42, 0.8)", "border": "#ec4899", "color": "#ffffff"},
+            "distiller":              {"background": "rgba(15, 23, 42, 0.8)", "border": "#14b8a6", "color": "#ffffff"},
+            "browser":                {"background": "rgba(15, 23, 42, 0.8)", "border": "#3b82f6", "color": "#ffffff"},
+            "product_shortlister":    {"background": "rgba(15, 23, 42, 0.8)", "border": "#f97316", "color": "#ffffff"},
+            "product_analyst":        {"background": "rgba(15, 23, 42, 0.8)", "border": "#f59e0b", "color": "#ffffff"},
+            "product_recommendation": {"background": "rgba(15, 23, 42, 0.8)", "border": "#10b981", "color": "#ffffff"},
+            "computer":               {"background": "rgba(30, 27, 75, 0.9)",  "border": "#a78bfa", "color": "#ffffff"},
+        };
+        const DEFAULT_COLOR = {"background": "rgba(15, 23, 42, 0.8)", "border": "#64748b", "color": "#ffffff"};
+
+        // ── Build legend ─────────────────────────────────────────────────────────
+        const legendEl = document.getElementById('legend-container');
+        for (const [skill, c] of Object.entries(SKILL_COLORS)) {
+            legendEl.innerHTML += `<div class="legend-item">
+                <div class="legend-color" style="background-color:${c.background};border-color:${c.border};"></div>
+                <span>${skill}</span>
+            </div>`;
+        }
+
+        // ── vis-network setup ────────────────────────────────────────────────────
+        const nodesDS = new vis.DataSet([]);
+        const edgesDS = new vis.DataSet([]);
+        const container = document.getElementById('mynetwork');
+        const network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
+            layout: {
+                hierarchical: {
+                    enabled: true,
+                    direction: 'LR',
+                    sortMethod: 'directed',
+                    nodeSpacing: 160,
+                    levelSeparation: 260
+                }
+            },
+            nodes: {
+                shape: 'box',
+                margin: 12,
+                font: { face: 'Outfit', size: 14, color: '#ffffff' },
+                borderWidth: 2,
+                shadow: { enabled: true, color: 'rgba(0,0,0,0.5)', size: 10, x: 0, y: 4 }
+            },
+            edges: {
+                arrows: { to: { enabled: true, scaleFactor: 1 } },
+                color: { color: 'rgba(255, 255, 255, 0.15)', highlight: '#8b5cf6', hover: '#8b5cf6' },
+                width: 2,
+                shadow: { enabled: true, color: 'rgba(0,0,0,0.3)', size: 4, x: 0, y: 2 }
+            }
+        });
+
+        const detailsPanel = document.getElementById('details-panel');
+        const resizer      = document.getElementById('drag-resizer');
+        const openBtn      = document.getElementById('open-panel-btn');
+
+        // Prevent wheel/scroll events in the right panel from bubbling up to the
+        // vis-network canvas. Without this, vis-network captures the scroll and
+        // pans/zooms the graph, making the detail panel appear to snap back to top.
+        detailsPanel.addEventListener('wheel', function(e) {
+            e.stopPropagation();
+        }, { passive: true });
+
+        // Store raw node data for the details panel (updated on each poll)
+        let nodeDetailsMap = {};
+
+        network.on("selectNode", function (params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                const nodeData = nodesDS.get(nodeId);
+                if (nodeData && nodeData.details) {
+                    renderDetails(nodeData.details);
+                }
+            }
+        });
+        network.on("deselectNode", function () {
+            renderEmptyDetails();
+        });
+
+        // ── Polling ──────────────────────────────────────────────────────────────
+        const POLL_MS = 2000;
+        let currentSessionId = null;
+        let lastNodeCount = 0;
+        let completeTimer = null;
+
+        // Read forced session_id from URL query string (passed by the button)
+        const urlParams = new URLSearchParams(window.location.search);
+        const forcedSid = urlParams.get('session_id') || null;
+
+        async function poll() {
+            try {
+                // Prefer the forced session_id from the URL so the viewer always
+                // shows the exact session the user launched (not auto-discovery).
+                const url = forcedSid
+                    ? `/api/graph-status?session_id=${encodeURIComponent(forcedSid)}`
+                    : '/api/graph-status';
+                const resp = await fetch(url, { cache: 'no-store' });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                applyUpdate(data);
+            } catch (e) { /* network error — keep polling */ }
+        }
+
+        function applyUpdate(data) {
+            const { session_id, nodes, edges, query, status } = data;
+
+            // Update session info in header when we first know it
+            if (session_id && session_id !== currentSessionId) {
+                currentSessionId = session_id;
+                document.getElementById('title-text').textContent =
+                    'Computer Agent — Live DAG: ' + session_id;
+                document.title = '\u{1F9E0} DAG \u2014 ' + session_id;
+                // Reset graph for a new session
+                nodesDS.clear();
+                edgesDS.clear();
+                nodeDetailsMap = {};
+                lastNodeCount = 0;
+            }
+
+            // Update query display
+            if (query) {
+                document.getElementById('query-text').textContent = query;
+            }
+
+            // Update live badge
+            const badge = document.getElementById('live-badge');
+            const badgeText = document.getElementById('badge-text');
+            badge.className = 'live-badge ' + (status || 'starting');
+            const labels = { idle: 'Idle', starting: 'Starting…', running: 'Running', complete: 'Complete' };
+            badgeText.textContent = labels[status] || status;
+
+            // Build vis-node objects exactly like persistence.py does
+            const visNodes = (nodes || []).map(n => {
+                const skill  = n.skill  || 'unknown';
+                const status = n.status || 'pending';
+                const colors = SKILL_COLORS[skill] || DEFAULT_COLOR;
+                const label  = `ID: ${n.id}\nSkill: ${skill}\nStatus: ${status}`;
+                const details = {
+                    id:          n.id,
+                    skill:       skill,
+                    status:      status,
+                    inputs:      n.inputs   || [],
+                    metadata:    n.metadata || {},
+                    result:      n.result   || {},
+                    prompt_sent: n.prompt_sent || ''
+                };
+                return { id: n.id, label, color: colors, shape: 'box', details };
+            });
+
+            const visEdges = (edges || []).map(e => ({
+                id:   `${e.source}->${e.target}`,
+                from: e.source,
+                to:   e.target
+            }));
+
+            // Diff-update so the graph animates incrementally
+            const existingNodeIds = new Set(nodesDS.getIds());
+            const newNodeIds      = new Set(visNodes.map(n => n.id));
+            nodesDS.update(visNodes.filter(n =>  existingNodeIds.has(n.id)));
+            nodesDS.add   (visNodes.filter(n => !existingNodeIds.has(n.id)));
+            nodesDS.remove([...existingNodeIds].filter(id => !newNodeIds.has(id)));
+
+            const existingEdgeIds = new Set(edgesDS.getIds());
+            const newEdgeIds      = new Set(visEdges.map(e => e.id));
+            edgesDS.add   (visEdges.filter(e => !existingEdgeIds.has(e.id)));
+            edgesDS.remove([...existingEdgeIds].filter(id => !newEdgeIds.has(id)));
+
+            // Refresh details panel if the selected node data changed
+            const selectedIds = network.getSelectedNodes();
+            if (selectedIds.length > 0) {
+                const nd = nodesDS.get(selectedIds[0]);
+                if (nd && nd.details) renderDetails(nd.details);
+            }
+
+            lastNodeCount = (nodes || []).length;
+
+            // Stop polling 30s after reaching complete state
+            if (status === 'complete') {
+                if (!completeTimer) {
+                    completeTimer = setTimeout(() => {
+                        clearInterval(pollTimer);
+                        badgeText.textContent = 'Done';
+                    }, 30000);
+                }
+            } else {
+                if (completeTimer) { clearTimeout(completeTimer); completeTimer = null; }
+            }
+        }
+
+        const pollTimer = setInterval(poll, POLL_MS);
+        poll(); // immediate first call
+
+        // ── Details panel renderers (identical to persistence.py) ────────────────
+        function renderEmptyDetails() {
+            detailsPanel.innerHTML =
+                '<div class="details-header">' +
+                '<span class="details-title">Node details</span>' +
+                '<button class="close-panel-btn" onclick="collapsePanel()">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' +
+                '</button>' +
+                '</div>' +
+                '<div class="empty-details">Select a node in the graph to view details, prompts, and outputs.</div>';
+        }
+
+        function renderDetails(d) {
+            const statusClass = 'status-' + (d.status || 'pending');
+            let resultHTML = '';
+            let metadataHTML = '';
+
+            if (d.result && Object.keys(d.result).length > 0) {
+                const resText = JSON.stringify(d.result, null, 2);
+                resultHTML = '<div class="details-section">' +
+                             '<div class="details-sec-title">Result Output</div>' +
+                             '<pre class="details-value pre-container">' + escapeHtml(resText) + '</pre>' +
+                             '</div>';
+            }
+
+            if (d.metadata && Object.keys(d.metadata).length > 0) {
+                const metaText = JSON.stringify(d.metadata, null, 2);
+                metadataHTML = '<div class="details-section">' +
+                               '<div class="details-sec-title">Metadata</div>' +
+                               '<pre class="details-value pre-container">' + escapeHtml(metaText) + '</pre>' +
+                               '</div>';
+            }
+
+            let promptHTML = '';
+            if (d.prompt_sent) {
+                promptHTML = '<div class="details-section">' +
+                             '<div class="details-sec-title">Prompt Sent</div>' +
+                             '<pre class="details-value pre-container">' + escapeHtml(d.prompt_sent) + '</pre>' +
+                             '</div>';
+            }
+
+            detailsPanel.innerHTML =
+                '<div class="details-header">' +
+                '<span class="details-title">Node details: ' + escapeHtml(d.id) + '</span>' +
+                '<button class="close-panel-btn" onclick="collapsePanel()">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' +
+                '</button>' +
+                '</div>' +
+                '<div class="details-section">' +
+                '<div class="details-sec-title">Skill / Agent</div>' +
+                '<div class="details-value">' + escapeHtml(d.skill) + '</div>' +
+                '</div>' +
+                '<div class="details-section">' +
+                '<div class="details-sec-title">Status</div>' +
+                '<div><span class="status-pill ' + statusClass + '">' + escapeHtml(d.status || 'unknown') + '</span></div>' +
+                '</div>' +
+                '<div class="details-section">' +
+                '<div class="details-sec-title">Inputs</div>' +
+                '<div class="details-value">' + escapeHtml(JSON.stringify(d.inputs)) + '</div>' +
+                '</div>' +
+                resultHTML +
+                promptHTML +
+                metadataHTML;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // ── Resizer drag-and-drop (identical to persistence.py) ──────────────────
+        let isDragging = false;
+
+        resizer.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            resizer.classList.add('dragging');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            const containerWidth = document.querySelector('.main-container').clientWidth;
+            const newWidth = containerWidth - e.clientX;
+
+            if (newWidth < 50) {
+                collapsePanel();
+            } else if (newWidth > containerWidth * 0.7) {
+                detailsPanel.style.width = (containerWidth * 0.7) + 'px';
+            } else {
+                detailsPanel.style.width = newWidth + 'px';
+                detailsPanel.style.display = 'flex';
+                detailsPanel.style.paddingLeft = '24px';
+                detailsPanel.style.paddingRight = '24px';
+                detailsPanel.style.borderLeftWidth = '1px';
+                detailsPanel.style.opacity = '1';
+                resizer.style.display = 'block';
+                openBtn.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            if (isDragging) {
+                isDragging = false;
+                resizer.classList.remove('dragging');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+
+        function collapsePanel() {
+            detailsPanel.style.width = '0px';
+            detailsPanel.style.paddingLeft = '0px';
+            detailsPanel.style.paddingRight = '0px';
+            detailsPanel.style.borderLeftWidth = '0px';
+            detailsPanel.style.opacity = '0';
+            setTimeout(() => {
+                if (detailsPanel.style.width === '0px') {
+                    detailsPanel.style.display = 'none';
+                }
+            }, 300);
+            resizer.style.display = 'none';
+            openBtn.style.display = 'flex';
+        }
+
+        function expandPanel() {
+            detailsPanel.style.display = 'flex';
+            detailsPanel.offsetHeight; // force reflow
+            detailsPanel.style.width = '400px';
+            detailsPanel.style.paddingLeft = '24px';
+            detailsPanel.style.paddingRight = '24px';
+            detailsPanel.style.borderLeftWidth = '1px';
+            detailsPanel.style.opacity = '1';
+            resizer.style.display = 'block';
+            openBtn.style.display = 'none';
+        }
+
+        openBtn.addEventListener('click', expandPanel);
+
+        renderEmptyDetails();
+    </script>
+</body>
+</html>

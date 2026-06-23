@@ -36,6 +36,30 @@ Available skills:
                      cascade choose its own layer; the skill knows
                      how to escalate from extract → a11y → vision
                      when needed.
+  computer           drive a native desktop application on this Mac.
+                     Use for tasks that involve a locally installed app
+                     (Calculator, Notes, Mail, WhatsApp, VS Code, etc.).
+                     metadata MUST set:
+                       app_name   (str) the app display name, e.g. "WhatsApp"
+                                  The skill automatically resolves bundle IDs
+                                  and Electron configuration — you do not need
+                                  to specify those technical details.
+                       goal       (str) precise sub-task, e.g.
+                                  "search for Mani Driver and send the message:
+                                  We need to go to Mysore on 3 July."
+                     OPTIONAL:
+                       hotkeys    (list) if you know the exact keystroke
+                                  sequence, provide it to skip the LLM
+                                  generation step in Layer 3.
+                                  Each step: {"keys":["cmd","n"]} or
+                                             {"text":"hello world"}
+                                  If omitted, the skill generates them.
+
+                     The skill runs all 5 layers automatically — you do
+                     NOT need to specify which layer to use.
+                     NOTE: For messaging apps (WhatsApp, Telegram, Slack),
+                     do NOT include hotkeys — the skill uses Vision directly
+                     and handles all navigation automatically.
   researcher         fetch fresh content from the web (general
                      URLs, search). Use for open-ended research
                      across multiple sources. Do NOT use when the
@@ -234,6 +258,45 @@ in the INPUTS block.
     - If the prior path was `"extract"`, retry the browser search node with `metadata.force_path = "a11y"`.
     - If the prior path was `"a11y"`, retry the browser search node with `metadata.force_path = "vision"`.
     This forces the browser skill to bypass the failing layer and go to the next cheapest interactive layer in cycles.
+
+  COMPUTER NODE RECOVERY — escalate through the 5 cascade layers:
+  When a `computer` node failed (success=False) or its critic failed,
+  inspect `output.path` to see which layer was last attempted, then
+  use `metadata.force_path` in the recovery node to skip to the NEXT layer.
+  The computer cascade layers in order: extract → applescript → hotkeys → a11y → vision.
+
+  Layer escalation table:
+    Prior output.path = "extract"     → recovery force_path = "applescript"
+    Prior output.path = "applescript" → recovery force_path = "hotkeys"
+    Prior output.path = "hotkeys"     → recovery force_path = "a11y"
+    Prior output.path = "a11y"        → recovery force_path = "vision"
+    Prior output.path = "vision"      → all 5 layers exhausted; use formatter
+                                         to tell the user the task could not
+                                         be completed and ask them to retry.
+
+  Do NOT change the goal between recovery attempts unless the prior failure
+  message indicates the goal itself was misunderstood. The `force_path` is
+  enough — the skill will try from that layer onward.
+
+  CRITICAL — label the recovery computer node and wire the formatter to it:
+  1. Assign `"label": "recovery_computer"` to the recovery computer node.
+  2. Use `"n:recovery_computer"` in the formatter's `inputs`.
+     NEVER use "n:1" or the original planner node ID — the formatter must
+     see the NEW computer node's output, not the original planner output.
+
+  Full recovery example (prior path="hotkeys", escalating to a11y):
+  {"rationale": "Hotkeys changed the UI but could not verify content; escalating to AX tree layer.",
+   "nodes": [
+     {"skill": "computer", "inputs": [], "metadata": {
+        "label": "recovery_computer",
+        "app_name": "Microsoft Word",
+        "bundle_id": "com.microsoft.Word",
+        "goal": "Create a new document and type a Harry Potter paragraph.",
+        "force_path": "a11y"
+     }},
+     {"skill": "formatter", "inputs": ["USER_QUERY", "n:recovery_computer"],
+      "metadata": {"label": "out"}}
+   ]}
   - For Amazon shopping queries, if the browser search node fails (e.g., `all layers exhausted`), you MUST STILL emit the full shopping pipeline (new browser search node → product_shortlister → parallel browser detail nodes → parallel analysts → recommendation → formatter) rather than reverting to a general researcher or text formatter response. To recover successfully, modify/simplify the retried browser search node's goal (e.g., remove the specific delivery filter instruction from the goal if it was previously failing, and just ask to search and extract listings).
   - Only emit fresh successor nodes for (a) the failing step, with
     a DIFFERENT approach — different query, source, or scope —

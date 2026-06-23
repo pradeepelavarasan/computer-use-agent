@@ -29,7 +29,7 @@ DEFAULT_ORDER = [
 ]
 ORDER = [x.strip() for x in os.getenv("LLM_ORDER", ",".join(DEFAULT_ORDER)).split(",") if x.strip()]
 ROUTER_ORDER = [x.strip() for x in os.getenv("ROUTER_ORDER", ",".join(DEFAULT_ROUTER_ORDER)).split(",") if x.strip()]
-PORT = int(os.getenv("GATEWAY_V9_PORT", "8109"))
+PORT = int(os.getenv("GATEWAY_V9_PORT", "8110"))
 
 # V8: agent_routing.yaml maps `agent="<name>"` to a preferred provider name.
 # The caller's explicit `provider=` still wins. Loaded once at import; the

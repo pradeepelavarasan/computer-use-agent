@@ -1,8 +1,8 @@
 [project]
-name = "eagv3-s9"
+name = "eagv3-s10"
 version = "0.1.0"
-description = "EAGV3 Session 9 agent: S8 growing-graph runtime + Browser skill (extract/a11y/vision cascade)."
-requires-python = ">=3.11"
+description = "EAGV3 Session 10 agent: S9 browser agent + Computer skill (cua-driver + AppleScript cascade)."
+requires-python = ">=3.12,<3.14"
 dependencies = [
     "mcp[cli]",
     "httpx",
@@ -21,6 +21,8 @@ dependencies = [
     "trafilatura>=1.12",
     "lxml>=5.2",
     "lxml-html-clean>=0.1",
+    # Session 10 additions for the Computer skill.
+    "cua-computer>=0.5.19",
 ]
 
 [dependency-groups]
