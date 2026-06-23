@@ -4,7 +4,7 @@ A multi-agent native desktop automation platform for macOS. Built to test and de
 
 This project extends the Directed Acyclic Graph (DAG) multi-agent orchestrator from [Browser Agent for Shopping](https://github.com/pradeepelavarasan/Browser-Agent-for-Shopping) with a new **Computer** skill that drives native macOS applications. Where the browser skill controlled web pages via Playwright, the computer skill uses a five-layer cascade backed by AppleScript and the OS-level Accessibility API.
 
-🎥 YouTube Demo: [LINK TO BE ADDED]
+🎥 YouTube Demo: https://youtu.be/Rfk6_Ecdqrk
 
 ![Banner Image](assets/Computer%20use%20banner%20image.png)
 
