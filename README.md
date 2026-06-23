@@ -202,3 +202,139 @@ Source: https://www.indianhealthyrecipes.com/paneer-butter-masala-restaurant-sty
 | **TOTAL** | | | | | **39,702 ms** | **790** | **396** |
 
 ---
+
+### 3. Send a Message on Telegram (VISION)
+
+### Session Log: s9-2026-06-24_02-44-20
+
+#### 1. Original User Goal
+> Open Telegram and search for my contact Puneeth and send a message "Lets catch this sunday at 6pm"
+
+![Task Initiated](assets/3.%20Task%20Initiated.png)
+
+#### 2. Planner DAG
+![Planner DAG](assets/3.%20DAG.png)
+
+#### 3. Computer Path Chosen
+The Computer cascade chose the **VISION** interaction path.
+
+#### 4. Computer Actions
+
+**App:** Telegram  
+**Goal:** Search for contact Puneeth and send the message: Lets catch this sunday at 6pm
+
+Telegram is an Electron app — its AX tree exposes only the system menu bar with no app window content. The cascade escalated immediately to **Layer 5 (Vision / Set-of-Marks)**, which screenshots the screen each turn and sends it to a vision LLM to identify UI elements and decide the next action.
+
+**Vision Session — 9 turns (Scan → Act → Verify):**
+
+**Turn 1 — Open quick search**
+
+Before: Telegram main window
+
+![](assets/3.%20scan%20t00.png)
+
+Action: `press cmd+k`
+
+After: Search overlay opens
+
+![](assets/3.%20verify%20t00.png)
+
+---
+
+**Turn 3 — Navigate to contact**
+
+Action: `press Down` × 2
+
+After: Puneeth highlighted in results, ready to open
+
+![](assets/3.%20verify%20t02.png)
+
+---
+
+**Turn 4 — Open chat**
+
+Action: `press Return`
+
+After: Puneeth's chat opened, compose field visible
+
+![](assets/3.%20verify%20t03.png)
+
+---
+
+**Turn 5 — Type the message**
+
+Action: `type "Lets catch this sunday at 6pm"`
+
+After: Message text in compose field, ready to send
+
+![](assets/3.%20verify%20t04.png)
+
+---
+
+**Turns 6–8 — Figuring out how to submit**
+
+With the message typed, the vision LLM tried two different approaches to hit the send button before settling on keyboard input. This is the scan-act-verify loop working as designed: each failed verify tells the model the previous action had no visible effect, prompting it to try a different approach.
+
+**Turn 6**
+
+Before: Compose field with message, send icon visible bottom-right
+
+![](assets/3.%20scan%20t05.png)
+
+Action: `click bbox [954, 973, 981, 995]`
+
+After (verify): Send icon still visible — click did not register
+
+![](assets/3.%20verify%20t05.png)
+
+---
+
+**Turn 7**
+
+Action: `click bbox [947, 966, 984, 994]` *(adjusted coordinates, second attempt)*
+
+After (verify): State unchanged — click still not registering
+
+![](assets/3.%20verify%20t06.png)
+
+---
+
+**Turn 8 — Switching to keyboard**
+
+Before: Model switches strategy from click to keyboard
+
+![](assets/3.%20scan%20t07.png)
+
+Action: `press Down`
+
+After (verify): Focus confirmed on send — next step is Enter
+
+![](assets/3.%20verify%20t07.png)
+
+---
+
+**Turn 9 — Send**
+
+Action: `press Return`
+
+✅ `goal_complete: The chat with Puneeth is open and the message 'Lets catch this sunday at 6pm' has been successfully sent, as evidenced by the message bubble in the chat history.`
+
+![](assets/3.%20verify%20t08.png)
+
+#### 5. Final Result
+
+I have successfully opened Telegram, located your contact Puneeth, and sent the message: "Lets catch this sunday at 6pm."
+
+![Task Completed](assets/3.%20Task%20Completed.png)
+
+#### 6. Performance Summary
+
+| Node | Skill | Status | Provider | Model | Duration | Tokens In | Tokens Out |
+|---|---|---|---|---|---|---|---|
+| `n:1` | planner | ✓ complete | gemini_lite_1 | — | 6,992 ms | 0 | 0 |
+| `n:2` | computer | ✓ complete | gemini_lite_1, gemini_lite_2 | gemini-3.1-flash-lite | 69,153 ms | 32,726 | 425 |
+| `n:4` | critic | ✓ complete | gemini_lite_2 | gemini-3.1-flash-lite | 1,576 ms | 1,719 | 50 |
+| `n:3` | formatter | ✓ complete | gemini_lite_2 | — | 1,528 ms | 0 | 0 |
+| **TOTAL** | | | | | **79,249 ms** | **34,445** | **475** |
+
+---
